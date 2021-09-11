@@ -85,10 +85,10 @@ params:
   tiles:
     enable: yes
     showcase:
-      - image: stock_news.jpg
-        subtitle: Ipsum Dolor Sit Amet
-        title: Aliquam
-        url: blogs/aliquam
+      - image: stock_news1.jpg
+        subtitle: How can news affect stock performances?
+        title:  News and stock performances
+        url: blogs/linli
       - image: pic02.jpg
         subtitle: Feugiat Amet Tempus
         title: Tempus
