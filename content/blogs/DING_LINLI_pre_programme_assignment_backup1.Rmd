@@ -19,6 +19,7 @@ library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
 library(gapminder)  # gapminder dataset
 library(here)
 library(janitor)
+library(jpeg)
 ```
 
 The goal is to test your software installation, to demonstrate competency in Markdown, and in the basics of `ggplot`.
@@ -30,7 +31,10 @@ The goal is to test your software installation, to demonstrate competency in Mar
 - I worked in **Hong Kong** for 2 years as a *Consultant*
 - This is the [company](https://www.pwchk.com) I worked in.
 - I have 2 cats 
-![alt](cats.jpeg)
+```{r cats, echo=FALSE, out.width="100%"}
+knitr::include_graphics("/img/cats.jpeg", error = FALSE)
+```
+
 
 
 # Task 2: `gapminder` country comparison
