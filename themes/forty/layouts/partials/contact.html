@@ -36,7 +36,9 @@
                         <span class="icon alt fa-phone"></span>
                         {{ range .Site.Params.Contact.phone }}
                         <h3>{{ .title }}</h3>
-                        <span>{{ .phone }}</span>
+                        <span>{{ if .phone1 }}{{ .phone1 }}{{end}}
+                        {{ if .phone2 }} <br /> {{ .phone2 }} {{ end }}
+                        </span>
                         {{ end }}
                     </div>
                 </section>

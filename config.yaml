@@ -10,7 +10,7 @@ params:
     subtitle: |-
       HERE ARE THE DATA ANALYTICS PROJECTS THAT 
       I HAVE BEEN WORKING SO FAR.
-    title: Hey, welcome to my portfolio website!
+    title: Hey, welcome to Linli's portfolio website!
   blog: {}
   contact:
     address:
@@ -25,8 +25,8 @@ params:
         title: Email
     enable: yes
     phone:
-      - phone: (UK) +44 7732 765143
-        #how to? China: (China) +86 13094830823
+      - phone1: (UK) +44 7732 765143
+        phone2: (China) +86 130 9483 0823
         title: Phone
   custom_css: []
   custom_js: []
