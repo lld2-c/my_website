@@ -10,6 +10,6 @@ description: Nullam et orci eu lorem consequat tincidunt vivamus et sagittis mag
 draft: false
 image: stock_news1.jpg
 keywords: ""
-slug: linli
+slug: stock
 title: News and stock performances
 ---
