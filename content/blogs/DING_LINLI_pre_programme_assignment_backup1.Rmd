@@ -8,7 +8,7 @@ description: Nullam et orci eu lorem consequat tincidunt vivamus et sagittis mag
   sed magna lacinia magna pellentesque lorem ipsum dolor. Nullam et orci eu lorem
   consequat tincidunt. Vivamus et sagittis tempus.
 draft: false
-image: trump_vaccine.jpg
+#image: trump_vaccine.jpg
 keywords: ""
 slug: tempus
 title: Political lean and vaccination in US 2021
@@ -108,11 +108,14 @@ votes_vacc_pop <- temp_votes_vacc_pop %>%
 
 Then, plot the relationship between percentage of trump vote and percentage of population vaccinated.
 
-```{r}
-#vac_pop_plot <- 
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
 votes_vacc_pop %>% 
   ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
              size=pop_estimate_2019)) + 
+  
+  #hide the legend for point size
+  theme(legend.position="none")+
   
   #aethetics for population size
   geom_point(color = "black", alpha = .6) +

@@ -8,7 +8,7 @@ description: Nullam et orci eu lorem consequat tincidunt vivamus et sagittis mag
   sed magna lacinia magna pellentesque lorem ipsum dolor. Nullam et orci eu lorem
   consequat tincidunt. Vivamus et sagittis tempus.
 draft: false
-image: trump_vaccine.jpg
+#image: trump_vaccine.jpg
 keywords: ""
 slug: tempus
 title: Political lean and vaccination in US 2021
@@ -21,60 +21,5 @@ title: Political lean and vaccination in US 2021
 <div id="how-trump-voters-react-to-vaccination" class="section level1">
 <h1>How Trump voters react to vaccination?</h1>
 <p>Then, plot the relationship between percentage of trump vote and percentage of population vaccinated.</p>
-<pre class="r"><code>#vac_pop_plot &lt;- 
-votes_vacc_pop %&gt;% 
-  ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
-             size=pop_estimate_2019)) + 
-  
-  #aethetics for population size
-  geom_point(color = &quot;black&quot;, alpha = .6) +
-  scale_size(range = c(0, 15)) +
-  
-  #fit a regression line to the plot
-  geom_smooth(method=lm) + 
-  
-  #draw the dash lines
-  geom_hline(yintercept=0.85, linetype=&quot;dashed&quot;) +
-  geom_hline(yintercept=0.539, linetype=&quot;dashed&quot;) +
-  geom_hline(yintercept=0.508, linetype=&quot;dashed&quot;) +
-  
-  #break the graph into 3x3 grids with solid lines
-  geom_hline(yintercept=0.4, linetype=&quot;solid&quot;) +
-  geom_hline(yintercept=0.6, linetype=&quot;solid&quot;) +
-  geom_vline(xintercept=0.4, linetype=&quot;solid&quot;) +
-  geom_vline(xintercept=0.6, linetype=&quot;solid&quot;) +
-  
-  labs(title = &quot;COVID 19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY&quot;,
-       subtitle = &quot;(most states based on FULLY vaccinated only; (CA, GA, IA, MI &amp; TX based on total doses administered)\nData via Centers for Disease Control&quot;,
-       x = &quot;2020 Trump Vote %&quot;, 
-       y = &quot;% of Total Population Vaccinated&quot;) +
-  
-  theme(plot.title= element_text(size=10, face=&quot;bold&quot;, family = &quot;Tahoma&quot;))+
-  theme(plot.subtitle= element_text(size=8, family = &quot;Tahoma&quot;))+
-  
-  #add the text messages
-  annotate(&quot;text&quot;, x = 0.2,y = 0.89, 
-           label = &quot;Herd Immunity Threshold (?)&quot;,
-           color = &#39;blue&#39;,size = 3) +
-  annotate(&quot;text&quot;, x = 0.05, y = 0.56, 
-           label = &quot;TARGET:53.9%&quot;, fontface = &#39;italic&#39;, 
-           color = &#39;blue&#39;,size = 3) +
-  annotate(&quot;text&quot;, x = 0.05, y = 0.525, 
-           label = &quot;ACTUAL:50.8%&quot;, fontface = &#39;italic&#39;, 
-           color = &#39;blue&#39;,size = 3)+
-  annotate(&quot;text&quot;, x = 0.2, y = 0.1, label = &quot;14/Sept/2021&quot;, 
-           fontface = &#39;italic&#39;, color = &#39;red&#39;) +
-  annotate(&quot;text&quot;, x = 0.45, y = 1, fontface = &quot;bold&quot;, 
-           label = &quot;EVERY U.S. COUNTY&quot;, 
-           size = 3) +
-  scale_y_continuous(labels = scales::percent)+
-  scale_x_continuous(labels = scales::percent, limits = c(0,1))+
-  
-  #shade areas for political lean
-  annotate(geom = &quot;rect&quot;, xmin = 0, xmax = 0.55, ymin = -Inf, ymax = Inf,
-           fill = &quot;blue&quot;, alpha = 0.3)+
-  annotate(geom = &quot;rect&quot;, xmin = 0.45, xmax = 1, ymin = -Inf, ymax = Inf,
-           fill = &quot;red&quot;, alpha = 0.3)</code></pre>
-<pre><code>## `geom_smooth()` using formula &#39;y ~ x&#39;</code></pre>
 <p><img src="/blogs/DING_LINLI_pre_programme_assignment_backup1_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
 </div>

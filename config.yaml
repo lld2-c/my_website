@@ -93,7 +93,7 @@ params:
         subtitle: How do Trump supporters react to vaccination?
         title: Political lean and vaccination in US 2021
         url: blogs/tempus
-      - image: german_election_plot.png
+      - image: german_plot.png
         subtitle: Lorem Etiam Nullam
         title: German election poll 2021 prediction
         url: blogs/magna
