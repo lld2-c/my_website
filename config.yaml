@@ -91,7 +91,7 @@ params:
         url: blogs/bio
       - image: trump_vaccination_plot.png
         subtitle: How do Trump supporters react to vaccination?
-        title: Relationship between Trump support and vaccination 2021
+        title: Political lean and vaccination in US 2021
         url: blogs/tempus
       - image: german_election_plot.png
         subtitle: Lorem Etiam Nullam

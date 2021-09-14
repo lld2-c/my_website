@@ -8,343 +8,161 @@ description: Nullam et orci eu lorem consequat tincidunt vivamus et sagittis mag
   sed magna lacinia magna pellentesque lorem ipsum dolor. Nullam et orci eu lorem
   consequat tincidunt. Vivamus et sagittis tempus.
 draft: false
-image: pic08.jpg
+image: trump_vaccine.jpg
 keywords: ""
 slug: tempus
-title: Tempus
+title: Political lean and vaccination in US 2021
 ---
 
 ```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
 library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
-library(gapminder)  # gapminder dataset
+library(mosaic)
+library(ggthemes)
+library(lubridate)
+library(fivethirtyeight)
 library(here)
+library(skimr)
 library(janitor)
-library(jpeg)
+library(vroom)
+library(tidyquant)
+library(rvest) # to scrape wikipedia page
+library(kableExtra)
+library("ggpubr")
+library("scales")
+library(zoo)
 ```
 
-The goal is to test your software installation, to demonstrate competency in Markdown, and in the basics of `ggplot`.
+Under the COVID-19 pandemic in the United States, I found that there seems to be a strong relationship between people's political ideology and vaccination acceptance. 
 
-# Task 2: `gapminder` country comparison
+# How Trump voters react to vaccination?
 
-You have seen the `gapminder` dataset that has data on life expectancy, population, and GDP per capita for 142 countries from 1952 to 2007. To get a glimpse of the dataframe, namely to see the variable names, variable types, etc., we use the `glimpse` function. We also want to have a look at the first 20 rows of data.
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+
+# Download CDC vaccination by county
+cdc_url <- "https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD"
+vaccinations <- vroom(cdc_url) %>% 
+  janitor::clean_names() %>% 
+  filter(fips != "UNK") # remove counties that have an unknown (UNK) FIPS code
+
+# Download County Presidential Election Returns
+# https://dataverse.harvard.edu/dataset.xhtml?persistentId=doi:10.7910/DVN/VOQCHQ
+election2020_results <- vroom(here::here("data", "countypres_2000-2020.csv")) %>% 
+  janitor::clean_names() %>% 
+  
+  # just keep the results for the 2020 election
+  filter(year == "2020") %>% 
+  
+  # change original name county_fips to fips, to be consistent with the other two files
+  rename (fips = county_fips)
+
+# Download county population data
+population_url <- "https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232"
+population <- vroom(population_url) %>% 
+  janitor::clean_names() %>% 
+  
+  # select the latest data, namely 2019
+  select(fips = fip_stxt, pop_estimate_2019) %>% 
+  
+  # pad FIPS codes with leading zeros, so they are always made up of 5 characters
+  mutate(fips = stringi::stri_pad_left(fips, width=5, pad = "0"))
+
+election2020_results <- na.omit(election2020_results)
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+#Preparing the values for dataframe
+
+#Then, calculate the rate of votes for Trump in each county. 
+vote_data <- election2020_results %>% 
+  select(county_name, fips, candidate, candidatevotes, totalvotes) %>% 
+  filter(candidate == "DONALD J TRUMP") %>% 
+  group_by(county_name, fips, totalvotes) %>% 
+  summarise(vote_sum = sum(candidatevotes)) %>% 
+  mutate(vote_rate = vote_sum/totalvotes)
+
+#Then, filter the most recent data from vaccinations, in this case, september data.
+sept_vaccinations <- vaccinations %>% 
+  select(date, fips,series_complete_pop_pct) %>% 
+  filter(date == "09/04/2021")
+
+#After we filtered the dataset, we can conduct cleaning so that the code is more efficient regarding to a smaller dataset.
+sept_vaccinations <- na.omit(sept_vaccinations) %>% 
+  unique()
+
+#Next, join the september vaccination percentage to the percentage of votes for each county by each candidate.
+pct_trump_votes_vacc <- inner_join (vote_data, 
+                               sept_vaccinations , 
+                               by="fips")
+
+#Next, join the population size for each county into the percentage trump votes vaccination table.
+temp_votes_vacc_pop <- inner_join (pct_trump_votes_vacc, 
+                               population , 
+                               by="fips")
+
+#Filter out the 0-values for % total population vaccinated
+votes_vacc_pop <- temp_votes_vacc_pop %>% 
+  filter(series_complete_pop_pct != 0)
+
+```
+
+Then, plot the relationship between percentage of trump vote and percentage of population vaccinated.
 
 ```{r}
-#install.packages("gapminder")
-library(gapminder)
-```
-
-
-```{r}
-glimpse(gapminder)
-```
-
-
-```{r}
-head(gapminder, 20) # look at the first 20 rows of the dataframe
-
-```
-
-Your task is to produce two graphs of how life expectancy has changed over the years for the `country` and the `continent` you come from.
-
-I have created the `country_data` and `continent_data` with the code below.
-
-```{r}
-country_data <- gapminder %>% 
-            filter(country == "Greece") # just choosing Greece, as this is where I come from
-
-continent_data <- gapminder %>% 
-            filter(continent == "Europe")
-```
-
-First, create a plot of life expectancy over time for the single country you chose. Map `year` on the x-axis, and `lifeExp` on the y-axis. You should also use `geom_point()` to see the actual data points and `geom_smooth(se = FALSE)` to plot the underlying trendlines. You need to remove the comments **\#** from the lines below for your code to run.
-
-```{r, lifeExp_one_country}
- plot1 <- ggplot(data = country_data, mapping = aes(x = year, y = lifeExp))+
-   geom_point() +
-   geom_smooth(se = FALSE)+
-   NULL 
-
-plot1
-```
-
-Next we need to add a title. Create a new plot, or extend plot1, using the `labs()` function to add an informative title to the plot.
-
-```{r, lifeExp_one_country_with_label}
-plot1<- plot1 +
-   labs(title = "Life expectancy over the years in Greece",
-       x = "Year",
-       y = "Life Expectancy") +
-   NULL
-
-
-plot1
-```
-
-Secondly, produce a plot for all countries in the *continent* you come from. (Hint: map the `country` variable to the colour aesthetic. You also want to map `country` to the `group` aesthetic, so all points for each country are grouped together).
-
-```{r lifeExp_one_continent}
- ggplot(continent_data, mapping = aes(x = year, y = lifeExp, colour= country, group = country))+
-   geom_point() + 
-   geom_smooth(se = FALSE) +
-   NULL
-```
-
-Finally, using the original `gapminder` data, produce a life expectancy over time graph, grouped (or faceted) by continent. We will remove all legends, adding the `theme(legend.position="none")` in the end of our ggplot.
-
-```{r lifeExp_facet_by_continent}
- ggplot(data = gapminder , mapping = aes(x = year, y =  lifeExp, colour= country))+
-   geom_point() + 
-   geom_smooth(se = FALSE) +
-   facet_wrap(~continent) +
-   theme(legend.position="none") + #remove all legends
-   NULL
-```
-
-Given these trends, what can you say about life expectancy since 1952? Again, don't just say what's happening in the graph. Tell some sort of story and speculate about the differences in the patterns.
-
-> Type your answer after this blockquote.
-We can see from Africa graph that there is a big leap of life expectancy from 1950 to 1980, this is probably because of the decolonisation of Africa which took place in the mid-to-late 1950s to 1975. 
-Vast majority of European countries have high and relative the same life expectancy from 1950s and it kept steadily increasing throughout the years. This maybe because of the fact that after WWII, in 1950s, Europe started to unite economically and politically by European Coal and Steel Community, and later in 1950s, "Common Market" was formed. And Europe has grown economically as a whole ever since. 
-
-# Task 3: Brexit vote analysis
-
-We will have a look at the results of the 2016 Brexit vote in the UK. First we read the data using `read_csv()` and have a quick glimpse at the data
-
-```{r load_brexit_data, warning=FALSE, message=FALSE}
-brexit_results <- read_csv(here::here("data","brexit_results.csv"))
-
-glimpse(brexit_results)
-```
-
-The data comes from [Elliott Morris](https://www.thecrosstab.com/), who cleaned it and made it available through his [DataCamp class on analysing election and polling data in R](https://www.datacamp.com/courses/analyzing-election-and-polling-data-in-r).
-
-Our main outcome variable (or y) is `leave_share`, which is the percent of votes cast in favour of Brexit, or leaving the EU. Each row is a UK [parliament constituency](https://en.wikipedia.org/wiki/United_Kingdom_Parliament_constituencies).
-
-To get a sense of the spread, or distribution, of the data, we can plot a histogram, a density plot, and the empirical cumulative distribution function of the leave % in all constituencies.
-
-```{r brexit_histogram, warning=FALSE, message=FALSE}
-
-# histogram
-ggplot(brexit_results, aes(x = leave_share)) +
-  geom_histogram(binwidth = 2.5) +
-  labs(title = "Leave distribution of the leave share in all constituencies",
-       x = "Leave share", 
-       y = "Count")+
-  NULL
-
-# density plot-- think smoothed histogram
-ggplot(brexit_results, aes(x = leave_share)) +
-  geom_density() +
-  labs(title = "Leave distribution of the leave share in all constituencies",
-       x = "Leave share", 
-       y = "Density")+
-  NULL
-
-
-# The empirical cumulative distribution function (ECDF) 
-ggplot(brexit_results, aes(x = leave_share)) +
-  stat_ecdf(geom = "step", pad = FALSE) +
-  scale_y_continuous(labels = scales::percent)  +
-  labs(title = "Cumulative leave share density in all constituencies",
-       x = "Leave share", 
-       y = "Cumulative density")+
-  NULL
+#vac_pop_plot <- 
+votes_vacc_pop %>% 
+  ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
+             size=pop_estimate_2019)) + 
   
+  #aethetics for population size
+  geom_point(color = "black", alpha = .6) +
+  scale_size(range = c(0, 15)) +
+  
+  #fit a regression line to the plot
+  geom_smooth(method=lm) + 
+  
+  #draw the dash lines
+  geom_hline(yintercept=0.85, linetype="dashed") +
+  geom_hline(yintercept=0.539, linetype="dashed") +
+  geom_hline(yintercept=0.508, linetype="dashed") +
+  
+  #break the graph into 3x3 grids with solid lines
+  geom_hline(yintercept=0.4, linetype="solid") +
+  geom_hline(yintercept=0.6, linetype="solid") +
+  geom_vline(xintercept=0.4, linetype="solid") +
+  geom_vline(xintercept=0.6, linetype="solid") +
+  
+  labs(title = "COVID 19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY",
+       subtitle = "(most states based on FULLY vaccinated only; (CA, GA, IA, MI & TX based on total doses administered)\nData via Centers for Disease Control",
+       x = "2020 Trump Vote %", 
+       y = "% of Total Population Vaccinated") +
+  
+  theme(plot.title= element_text(size=10, face="bold", family = "Tahoma"))+
+  theme(plot.subtitle= element_text(size=8, family = "Tahoma"))+
+  
+  #add the text messages
+  annotate("text", x = 0.2,y = 0.89, 
+           label = "Herd Immunity Threshold (?)",
+           color = 'blue',size = 3) +
+  annotate("text", x = 0.05, y = 0.56, 
+           label = "TARGET:53.9%", fontface = 'italic', 
+           color = 'blue',size = 3) +
+  annotate("text", x = 0.05, y = 0.525, 
+           label = "ACTUAL:50.8%", fontface = 'italic', 
+           color = 'blue',size = 3)+
+  annotate("text", x = 0.2, y = 0.1, label = "14/Sept/2021", 
+           fontface = 'italic', color = 'red') +
+  annotate("text", x = 0.45, y = 1, fontface = "bold", 
+           label = "EVERY U.S. COUNTY", 
+           size = 3) +
+  scale_y_continuous(labels = scales::percent)+
+  scale_x_continuous(labels = scales::percent, limits = c(0,1))+
+  
+  #shade areas for political lean
+  annotate(geom = "rect", xmin = 0, xmax = 0.55, ymin = -Inf, ymax = Inf,
+           fill = "blue", alpha = 0.3)+
+  annotate(geom = "rect", xmin = 0.45, xmax = 1, ymin = -Inf, ymax = Inf,
+           fill = "red", alpha = 0.3)
 
 
 ```
-
-One common explanation for the Brexit outcome was fear of immigration and opposition to the EU's more open border policy. We can check the relationship (or correlation) between the proportion of native born residents (`born_in_uk`) in a constituency and its `leave_share`. To do this, let us get the correlation between the two variables
-
-```{r brexit_immigration_correlation}
-brexit_results %>% 
-  select(leave_share, born_in_uk) %>% 
-  cor()
-```
-
-The correlation is almost 0.5, which shows that the two variables are positively correlated.
-
-We can also create a scatterplot between these two variables using `geom_point`. We also add the best fit line, using `geom_smooth(method = "lm")`.
-
-```{r brexit_immigration_plot}
-ggplot(brexit_results, aes(x = born_in_uk, y = leave_share)) +
-  geom_point(alpha=0.3) +
-  
-  # add a smoothing line, and use method="lm" to get the best straight-line
-  geom_smooth(method = "lm") + 
-  
-  # use a white background and frame the plot with a black box
-  theme_bw() +
-  
-  labs(title = "Scatter plot of how UK born percentage correlates to leave share",
-       x = "Born in UK", 
-       y = "Leave share")+
-  NULL
-```
-
-You have the code for the plots, I would like you to revisit all of them and use the `labs()` function to add an informative title, subtitle, and axes titles to all plots.
-
-What can you say about the relationship shown above? Again, don't just say what's happening in the graph. Tell some sort of story and speculate about the differences in the patterns.
-
-> Type your answer after, and outside, this blockquote.
-
-It seems that there is a weak positive correlation between percentage of people who is born in UK and the percentage of brexit supporters. It can also be seen that the points are clustered at the end of the line, indicating that in those constituencies where there are nearly 100% voters born in UK, there are approximately 60% of leave share. Research shows that between 2011 and 2014, nearly one-third of the UK population experienced relative income poverty at least once. This can be why these people in poverty, which consists of a significant percentage of voters, will vote for brexit since they fear for their occupations being taken away from refugees.  
-
-# Task 4: Animal rescue incidents attended by the London Fire Brigade
-
-[The London Fire Brigade](https://data.london.gov.uk/dataset/animal-rescue-incidents-attended-by-lfb) attends a range of non-fire incidents (which we call 'special services'). These 'special services' include assistance to animals that may be trapped or in distress. The data is provided from January 2009 and is updated monthly. A range of information is supplied for each incident including some location information (postcode, borough, ward), as well as the data/time of the incidents. We do not routinely record data about animal deaths or injuries.
-
-Please note that any cost included is a notional cost calculated based on the length of time rounded up to the nearest hour spent by Pump, Aerial and FRU appliances at the incident and charged at the current Brigade hourly rate.
-
-```{r load_animal_rescue_data, warning=FALSE, message=FALSE}
-
-url <- "https://data.london.gov.uk/download/animal-rescue-incidents-attended-by-lfb/8a7d91c2-9aec-4bde-937a-3998f4717cd8/Animal%20Rescue%20incidents%20attended%20by%20LFB%20from%20Jan%202009.csv"
-
-animal_rescue <- read_csv(url,
-                          locale = locale(encoding = "CP1252")) %>% 
-  janitor::clean_names()
-
-
-glimpse(animal_rescue)
-```
-One of the more useful things one can do with any data set is quick counts, namely to see how many observations fall within one category. For instance, if we wanted to count the number of incidents by year, we would either use `group_by()... summarise()` or, simply [`count()`](https://dplyr.tidyverse.org/reference/count.html)
-
-```{r, instances_by_calendar_year}
-
-animal_rescue %>% 
-  dplyr::group_by(cal_year) %>% 
-  summarise(count=n())
-
-animal_rescue %>% 
-  count(cal_year, name="count")
-
-```
-
-Let us try to see how many incidents we have by animal group. Again, we can do this either using group_by() and summarise(), or by using count()
-
-```{r, animal_group_percentages}
-animal_rescue %>% 
-  group_by(animal_group_parent) %>% 
-  
-  #group_by and summarise will produce a new column with the count in each animal group
-  summarise(count = n()) %>% 
-  
-  # mutate adds a new column; here we calculate the percentage
-  mutate(percent = round(100*count/sum(count),2)) %>% 
-  
-  # arrange() sorts the data by percent. Since the default sorting is min to max and we would like to see it sorted
-  # in descending order (max to min), we use arrange(desc()) 
-  arrange(desc(percent))
-
-
-animal_rescue %>% 
-  
-  #count does the same thing as group_by and summarise
-  # name = "count" will call the column with the counts "count" ( exciting, I know)
-  # and 'sort=TRUE' will sort them from max to min
-  count(animal_group_parent, name="count", sort=TRUE) %>% 
-  mutate(percent = round(100*count/sum(count),2))
-
-
-```
-
-Do you see anything strange in these tables? 
-
-Finally, let us have a look at the notional cost for rescuing each of these animals. As the LFB says,
-
-> Please note that any cost included is a notional cost calculated based on the length of time rounded up to the nearest hour spent by Pump, Aerial and FRU appliances at the incident and charged at the current Brigade hourly rate.
-
-There is two things we will do:
-
-1. Calculate the mean and median `incident_notional_cost` for each `animal_group_parent`
-2. Plot a boxplot to get a feel for the distribution of `incident_notional_cost` by `animal_group_parent`.
-
-
-Before we go on, however, we need to fix `incident_notional_cost` as it is stored as a `chr`, or character, rather than a number.
-
-```{r, parse_incident_cost,message=FALSE, warning=FALSE}
-
-# what type is variable incident_notional_cost from dataframe `animal_rescue`
-typeof(animal_rescue$incident_notional_cost)
-
-# readr::parse_number() will convert any numerical values stored as characters into numbers
-animal_rescue <- animal_rescue %>% 
-
-  # we use mutate() to use the parse_number() function and overwrite the same variable
-  mutate(incident_notional_cost = parse_number(incident_notional_cost))
-
-# incident_notional_cost from dataframe `animal_rescue` is now 'double' or numeric
-typeof(animal_rescue$incident_notional_cost)
-
-```
-
-Now that incident_notional_cost is numeric, let us quickly calculate summary statistics for each animal group. 
-
-
-```{r, stats_on_incident_cost,message=FALSE, warning=FALSE}
-
-animal_rescue %>% 
-  
-  # group by animal_group_parent
-  group_by(animal_group_parent) %>% 
-  
-  # filter resulting data, so each group has at least 6 observations
-  filter(n()>6) %>% 
-  
-  # summarise() will collapse all values into 3 values: the mean, median, and count  
-  # we use na.rm=TRUE to make sure we remove any NAs, or cases where we do not have the incident cos
-  summarise(mean_incident_cost = mean (incident_notional_cost, na.rm=TRUE),
-            median_incident_cost = median (incident_notional_cost, na.rm=TRUE),
-            sd_incident_cost = sd (incident_notional_cost, na.rm=TRUE),
-            min_incident_cost = min (incident_notional_cost, na.rm=TRUE),
-            max_incident_cost = max (incident_notional_cost, na.rm=TRUE),
-            count = n()) %>% 
-  
-  # sort the resulting data in descending order. You choose whether to sort by count or mean cost.
-  arrange(-mean_incident_cost)
-
-```
-
-
-
-Compare the mean and the median for each animal group. waht do you think this is telling us?
-Anything else that stands out? Any outliers?
-
-Finally, let us plot a few plots that show the distribution of incident_cost for each animal group.
-
-```{r, plots_on_incident_cost_by_animal_group,message=FALSE, warning=FALSE}
-
-# base_plot
-base_plot <- animal_rescue %>% 
-  group_by(animal_group_parent) %>% 
-  filter(n()>6) %>% 
-  ggplot(aes(x=incident_notional_cost))+
-  facet_wrap(~animal_group_parent, scales = "free")+
-  theme_bw()
-
-base_plot + geom_histogram()
-base_plot + geom_density()
-base_plot + geom_boxplot()
-base_plot + stat_ecdf(geom = "step", pad = FALSE) +
-  scale_y_continuous(labels = scales::percent)
-
-
-
-```
-
-Which of these four graphs do you think best communicates the variability of the `incident_notional_cost` values? Also, can you please tell some sort of story (which animals are more expensive to rescue than others, the spread of values) and speculate about the differences in the patterns.
-
-Cow, Ferret, Rabbit and Horse best communicates the variability of the `incident_notional_cost` values. Based on the graph, we can see that horse and cat are more expensive to rescue than others. This may be because of the fact that cats are asocial in nature and cats left in the wild may have bad experience with human. Thus, cats tend to be more difficult to rescue and cost more hours of rescuing. Horses, on the other hand, is relatively big in size compared to other animals. Therefore, rescuing horses requires more rescuers in one incident, adding up the notional cost even if the time consumption is similar to other animals. 
-
-
-# Submit the assignment
-
-Knit the completed R Markdown file as an HTML document (use the "Knit" button at the top of the script editor window) and upload it to Canvas.
-
-## Details
-
-If you want to, please answer the following
-
--   Who did you collaborate with: TYPE NAMES HERE
--   Approximately how much time did you spend on this problem set: ANSWER HERE
--   What, if anything, gave you the most trouble: ANSWER HERE
