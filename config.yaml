@@ -89,7 +89,7 @@ params:
         subtitle: Biography of DING Linli
         title:  Biography
         url: blogs/bio
-      - image: trump_vaccination_plot.png
+      - image: trump_plot.png
         subtitle: How do Trump supporters react to vaccination?
         title: Political lean and vaccination in US 2021
         url: blogs/tempus
