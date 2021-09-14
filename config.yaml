@@ -85,10 +85,10 @@ params:
   tiles:
     enable: yes
     showcase:
-      - image: stock_news1.jpg
-        subtitle: How can news affect stock performances?
-        title:  News and stock performances
-        url: blogs/linli
+      - image: bio.jpg
+        subtitle: Biography of DING Linli
+        title:  Ipsum
+        url: blogs/ipsum
       - image: pic02.jpg
         subtitle: Feugiat Amet Tempus
         title: Tempus
@@ -97,10 +97,10 @@ params:
         subtitle: Lorem Etiam Nullam
         title: Magna
         url: blogs/magna
-      - image: pic04.jpg
-        subtitle: Nisl Sed Aliquam
-        title: Ipsum
-        url: blogs/ipsum
+      - image: stock_news1.jpg
+        subtitle: How can news affect stock performances?
+        title:  News and stock performances
+        url: blogs/linli
       - image: pic05.jpg
         subtitle: Ipsum Dolor Sit Amet
         title: Consequat
