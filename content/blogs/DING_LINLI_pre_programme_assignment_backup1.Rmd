@@ -24,19 +24,6 @@ library(jpeg)
 
 The goal is to test your software installation, to demonstrate competency in Markdown, and in the basics of `ggplot`.
 
-> Please delete all the intro text I wrote from line 22 to line 69 and start writing your short biography after this blockquote.
-
-# Biography of Linli Ding
-- I come from **China** and obtained my bachelor in **Hong Kong**
-- I worked in **Hong Kong** for 2 years as a *Consultant*
-- This is the [company](https://www.pwchk.com) I worked in.
-- I have 2 cats 
-```{r cats, echo=FALSE, out.width="100%"}
-knitr::include_graphics("/img/cats.jpeg", error = FALSE)
-```
-
-
-
 # Task 2: `gapminder` country comparison
 
 You have seen the `gapminder` dataset that has data on life expectancy, population, and GDP per capita for 142 countries from 1952 to 2007. To get a glimpse of the dataframe, namely to see the variable names, variable types, etc., we use the `glimpse` function. We also want to have a look at the first 20 rows of data.

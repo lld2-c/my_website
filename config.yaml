@@ -87,8 +87,8 @@ params:
     showcase:
       - image: bio.jpg
         subtitle: Biography of DING Linli
-        title:  Ipsum
-        url: blogs/ipsum
+        title:  Biography
+        url: blogs/bio
       - image: pic02.jpg
         subtitle: Feugiat Amet Tempus
         title: Tempus

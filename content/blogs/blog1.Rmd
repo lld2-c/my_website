@@ -1,0 +1,22 @@
+---
+categories:
+- ""
+- ""
+date: "2017-10-31T21:28:43-05:00"
+description: ""
+draft: false
+image: bio.jpg
+keywords: ""
+slug: bio
+title: Biography
+---
+
+# Biography of Linli Ding
+- I come from **China** and obtained my bachelor in **Hong Kong**
+- I worked in **Hong Kong** for 2 years as a *Consultant*
+- This is the [company](https://www.pwchk.com) I worked in.
+- I have 2 cats 
+
+```{r cats, echo=FALSE, out.width="100%"}
+knitr::include_graphics("/img/cats.jpeg", error = FALSE)
+```
