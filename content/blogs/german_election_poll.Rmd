@@ -32,8 +32,11 @@ library(grid)
 library(plotly)
 ```
 
+```{r german_election, echo=FALSE, out.width="100%"}
+knitr::include_graphics("/img/german_election.jpeg", error = FALSE)
+```
 
-#  Opinion polls for the 2021 German elections
+##  Opinion polls for the 2021 German elections
 
 The list of the opinion polls since Jan 2021 can be found at [Wikipedia](https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election) and the graph is based on the scraped data from the Wikipedia page. 
 
@@ -74,7 +77,7 @@ german_election_polls <- polls[[1]] %>% # the first table on the page contains t
          )
 ```
 
-
+### A glimpse of the original data scraped from Wikipedia
 ```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
 #visualize the dataset
 glimpse(german_election_polls)
@@ -92,7 +95,7 @@ glimpse(german_election_polls)
 - `grune` refers to the voters in the `samplesize` who supports Die Grünen – Greens
 - `end_date` refers to the date when the result of the opinion poll enters the table and in the analysis below we will use this variable as the data input for x-axis.  
 
-The dataframe needs further transformation, e.g., `samplesize` is a character instead of a double, `union` does not represent a percentage or rate but instead it represents the rate*100. Therefore, with further cleaning performed, the cleaned dataset `election_data` looks like the following. 
+The dataframe needs further transformation, e.g., `samplesize` is a **character** instead of a **double**, `union` does not represent a percentage or rate but instead it represents the support_rate*100. Therefore, with further data cleansing performed, the new dataset `election_data` looks like the following: 
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 #selecting the columns that are useful
@@ -135,13 +138,24 @@ election_data_raw <- selected_data %>%
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 #remove the duplicated rows for the same date
 election_data <- election_data_raw[!duplicated(election_data_raw$totalsample), ]
+
+election_data <- election_data %>% 
+  select(end_date, 
+         average_rate_union,
+         average_rate_spd,
+         average_rate_af_d,
+         average_rate_fdp,
+         average_rate_linke,
+         average_rate_grune)
 ```
 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
 glimpse(election_data)
 ```
 
-To make a the plot representative of periodic trend, I applied 14-day rolling average for the poll result in each of 6 parties. 
+### Apply 14-day rolling average
+
+To make a the plot representative of periodic trend, I applied **14-day rolling average** for the poll result in each of 6 parties. 
 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE, results='hide'}
 election_data = na.omit(election_data)
@@ -173,6 +187,7 @@ The new dataset `election_data` is glimpsed as below.
 glimpse(election_data)
 ```
 
+### Initial plot
 Now that we have finished data cleansing and calculation for relevant variables, we can plot the data using the powerful `ggplot`.  
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
@@ -235,11 +250,16 @@ election_data %>%
 
 ```
 
-We can see from the graph that the CDU, the party where Angela Merkel belongs to, was leading until late August, 2021. Based on the plot, SPD has taken over CDU and it seems to be gaining more and more support. This is probably because Scholz, the candidate from SPD, is considered to have the best leadership skills compared to other candidates. Statistics showed that a quarter of of voters voted for SPD in the belief of Scholz's leadership qualities. 
+We can see from the graph that the **CDU**, the party where *Angela Merkel* belongs to, was leading until late August, 2021. This is probably because of the dropping support ever since *Armin Laschet* was chosen as the candidate in April. And he has not convinced the crowd why he should be chosen as the next leader of the country over other candidates. 
 
-The Greens also gained significant support over the most time of the year. This is probably due to the fact that they're considered to have the greatest competence in environmental and climate policy. And one in third German voters would consider environmental protection and climate change to be the most pressing topic for the next government.  
+Based on the plot, **SPD** has taken over **CDU** and it seems to be gaining more and more support. This is probably because *Scholz*, as *Merkel's* finance minister, he steered the economy through the pandemic and has more government experience than either *Laschet*, or the Greens’ candidate *Annalena Baerbock*, with 15 per cent. He is also considered to have the best leadership skills compared to other candidates. Statistics showed that a quarter of of voters voted for **SPD** in the belief of *Scholz's* leadership qualities. 
 
-To visualize each of the 6 parties' re presentative candidate, we can add the following to the graph to make it clear of the leading candidate's performance.
+The **Greens** also gained significant support over the most time of the year. This is probably due to the fact that they're considered to have the greatest competence in environmental and climate policy. And one in third German voters would consider environmental protection and climate change to be the most pressing topic for the next government.  
+
+*Reference article*: https://www.dw.com/en/german-election-spd-makes-major-gains-against-merkels-cdu/a-59066377 
+
+### Advanced plot with candidate profile pictures added for the trend line of each of the parties
+To visualize each of the 6 parties' re presentative candidate, we can add the image objects to the graph to make it clear of the leading candidate's performance representing each party.
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 #create image objects to be added to the graph plot
