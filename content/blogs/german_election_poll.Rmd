@@ -75,12 +75,24 @@ german_election_polls <- polls[[1]] %>% # the first table on the page contains t
 ```
 
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
-
+```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
+#visualize the dataset
 glimpse(german_election_polls)
 
 ```
 
+`german_election_polls` is a dataframe where the results from German election polling result is gathered from different polling firms. Some of the important variables are explained as below. 
+
+- `samplesize` refers to the number of potential voters. 
+- `union` refers to the voters in the `samplesize` who supports CDU/CSU – Christian Democrats
+- `spd` refers to the voters in the `samplesize` who supports SPD – Social Democrats
+- `af_d` refers to the voters in the `samplesize` who supports AfD – Far-right nationalists
+- `fdp` refers to the voters in the `samplesize` who supports FDP – Liberals
+- `linke` refers to the voters in the `samplesize` who supports Die Linke – The Left
+- `grune` refers to the voters in the `samplesize` who supports Die Grünen – Greens
+- `end_date` refers to the date when the result of the opinion poll enters the table and in the analysis below we will use this variable as the data input for x-axis.  
+
+The dataframe needs further transformation, e.g., `samplesize` is a character instead of a double, `union` does not represent a percentage or rate but instead it represents the rate*100. Therefore, with further cleaning performed, the cleaned dataset `election_data` looks like the following. 
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE}
 #selecting the columns that are useful
@@ -117,12 +129,21 @@ election_data_raw <- selected_data %>%
           average_rate_fdp = sum_vote_fdp/totalsample, 
           average_rate_linke = sum_vote_linke/totalsample, 
           average_rate_grune = sum_vote_grune/totalsample)
+```
 
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 #remove the duplicated rows for the same date
 election_data <- election_data_raw[!duplicated(election_data_raw$totalsample), ]
 ```
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
+```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
+glimpse(election_data)
+```
+
+To make a the plot representative of periodic trend, I applied 14-day rolling average for the poll result in each of 6 parties. 
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, results='hide'}
 election_data = na.omit(election_data)
 
 roll_mean_union = zoo::rollmean(election_data$average_rate_union,k = 14, fill = NA, align = "left")
@@ -146,9 +167,82 @@ election_data = cbind(election_data,
 
 ```
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE, out.width="100%"}
-colors = c("CDU/CSU" = "black", "SPD" = "red3", "AfD" = "midnightblue", "FDP" = "orange1","Linke" = "mediumvioletred", "Grune" = "green")
+The new dataset `election_data` is glimpsed as below. 
 
+```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
+glimpse(election_data)
+```
+
+Now that we have finished data cleansing and calculation for relevant variables, we can plot the data using the powerful `ggplot`.  
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
+#apply colors to each party  
+colors = c("CDU/CSU" = "black", "SPD" = "red3", "AfD" = "midnightblue", "FDP" = "orange1","Linke" = "mediumvioletred", "Grune" = "green")
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, fig.width=10,fig.height=12}
+#plot the graph
+election_data %>% 
+  ggplot(aes(x = end_date))+
+  
+  #add the scatter plot for each party
+  geom_point(aes(y = average_rate_union), alpha=0.3, size=1) + 
+  geom_point(aes(y = average_rate_spd), color="red3", alpha=0.3, size=1) +
+  geom_point(aes(y = average_rate_af_d), color="midnightblue", alpha=0.3, size=1)+
+  geom_point(aes(y = average_rate_fdp), color="orange1", alpha=0.3, size=1)+
+  geom_point(aes(y = average_rate_linke), color="mediumvioletred", alpha=0.3, size=1)+
+  geom_point(aes(y = average_rate_grune), color="green", alpha=0.3, size=1)+
+  
+  #add the line plot for each party
+  geom_line(aes(y = roll_mean_union, color="CDU/CSU"), size=1) + 
+  geom_line(aes(y = roll_mean_spd, color="SPD"),size=1) +
+  geom_line(aes(y = roll_mean_af_d, color="AfD"),size=1)+
+  geom_line(aes(y = roll_mean_fdp, color="FDP"),size=1)+
+  geom_line(aes(y = roll_mean_linke, color="Linke"),size=1)+
+  geom_line(aes(y = roll_mean_grune,  color="Grune"),size=1)+
+  
+  #add the titles, subtitles, legends on the x- and y-axis
+  labs(title = "German Election Poll", 
+       x="Date", y="Percentage of vote")+
+  theme(plot.title= element_text(size=10, face="bold", 
+                                 family = "Tahoma"))+
+  theme(plot.subtitle= element_text(size=8, family = "Tahoma"))+
+  
+  #customise the scales of x- and y-axis
+  scale_y_continuous(labels = scales::percent)+
+  scale_x_date(date_breaks = "2 month", 
+               labels = date_format("%b-%Y"), 
+               minor_breaks = "1 week")+
+  
+  #add the variable legends
+  scale_color_manual(values = colors, name = "Parties")+
+  
+  #customise the panel aethetics
+  theme(panel.background = element_rect(fill = "white", 
+                                        colour = "grey50"))+
+  #add referencing lines
+  geom_hline(yintercept=0.05, linetype="dashed", size = 0.2)+
+  geom_hline(yintercept=0.15, linetype="dashed", size = 0.2)+
+  geom_hline(yintercept=0.25, linetype="dashed", size = 0.2)+
+  geom_hline(yintercept=0.35, linetype="dashed", size = 0.2)+
+  geom_hline(yintercept=0.45, linetype="dashed", size = 0.2)+
+  
+  #draw dashed line for electoral threshold
+  annotate("text", x = as.Date("2021-01-25"),y = 0.04, 
+           label = "electoral threshold",
+           color = 'grey60',size = 5)
+
+```
+
+We can see from the graph that the CDU, the party where Angela Merkel belongs to, was leading until late August, 2021. Based on the plot, SPD has taken over CDU and it seems to be gaining more and more support. This is probably because Scholz, the candidate from SPD, is considered to have the best leadership skills compared to other candidates. Statistics showed that a quarter of of voters voted for SPD in the belief of Scholz's leadership qualities. 
+
+The Greens also gained significant support over the most time of the year. This is probably due to the fact that they're considered to have the greatest competence in environmental and climate policy. And one in third German voters would consider environmental protection and climate change to be the most pressing topic for the next government.  
+
+To visualize each of the 6 parties' re presentative candidate, we can add the following to the graph to make it clear of the leading candidate's performance.
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
+#create image objects to be added to the graph plot
 img1 <- readPNG("../../static/img/CDU.png")
 CDU_img<- rasterGrob(img1, interpolate=TRUE)
 
@@ -167,8 +261,6 @@ FDP_img<- rasterGrob(img5, interpolate=TRUE)
 img6 <- readPNG("../../static/img/LINKE.png")
 LINKE_img<- rasterGrob(img6, interpolate=TRUE)
 ```
-
-
 
 ```{r, warning=FALSE, message=FALSE, echo=FALSE, fig.width=10,fig.height=12}
 election_data %>% 
@@ -229,8 +321,3 @@ election_data %>%
   annotation_custom(LINKE_img,
                     xmin=as.Date("2021-08-31"),
                     ymax=0.08) 
-
-
-```
-
-
