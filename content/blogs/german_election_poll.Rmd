@@ -32,7 +32,7 @@ library(grid)
 library(plotly)
 ```
 
-```{r german_election, echo=FALSE, out.width="100%"}
+```{r german_election, echo=FALSE, fig.width=10}
 knitr::include_graphics("/img/german_election.jpeg", error = FALSE)
 ```
 
@@ -45,23 +45,18 @@ The list of the opinion polls since Jan 2021 can be found at [Wikipedia](https:/
 url <- "https://en.wikipedia.org/wiki/Opinion_polling_for_the_2021_German_federal_election"
 # https://www.economist.com/graphic-detail/who-will-succeed-angela-merkel
 # https://www.theguardian.com/world/2021/jun/21/german-election-poll-tracker-who-will-be-the-next-chancellor
-
-
 # get tables that exist on wikipedia page 
 tables <- url %>% 
   read_html() %>% 
   html_nodes(css="table")
-
-
 # parse HTML tables into a dataframe called polls 
 # Use purr::map() to create a list of all tables in URL
 polls <- map(tables, . %>% 
              html_table(fill=TRUE)%>% 
              janitor::clean_names())
 
-
 # list of opinion polls
-german_election_polls <- polls[[1]] %>% # the first table on the page contains the list of all opinions polls
+german_election_polls <- polls[[2]] %>% # the first table on the page contains the list of all opinions polls
   slice(2:(n()-1)) %>%  # drop the first row, as it contains again the variable names and last row that contains 2017 results
   mutate(
          # polls are shown to run from-to, e.g. 9-13 Aug 2021. We keep the last date, 13 Aug here, as the poll date
@@ -78,7 +73,7 @@ german_election_polls <- polls[[1]] %>% # the first table on the page contains t
 ```
 
 ### A glimpse of the original data scraped from Wikipedia
-```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
+```{r class.source="bg-primary", class.output="bg-success", warning=FALSE, message=FALSE, echo=TRUE}
 #visualize the dataset
 glimpse(german_election_polls)
 

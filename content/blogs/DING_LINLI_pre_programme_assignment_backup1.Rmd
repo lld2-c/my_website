@@ -68,9 +68,15 @@ population <- vroom(population_url) %>%
 
 election2020_results <- na.omit(election2020_results)
 ```
+##A glimpse of the [COVID data](https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD) downloaded from Centers for Disease Control and Prevention (CDC). 
+```{r class.source="bg-primary", class.output="bg-success", warning=FALSE, message=FALSE, echo=TRUE}
+#visualize the original dataset
+glimpse(election2020_results)
+```
 
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
+We then filter the data for Trump supporters, filter the most recent data (September 2021) and join [population data of each county](https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232) downloaded from Economic Research Service. 
+```{r, warning=FALSE, message=FALSE, echo=FALSE, results='hide'}
 #Preparing the values for dataframe
 
 #Then, calculate the rate of votes for Trump in each county. 
@@ -106,9 +112,52 @@ votes_vacc_pop <- temp_votes_vacc_pop %>%
 
 ```
 
-Then, plot the relationship between percentage of trump vote and percentage of population vaccinated.
+The prepared dataframe now look like as follows.
+```{r class.source="bg-primary", class.output="bg-success", warning=FALSE, message=FALSE, echo=TRUE}
+glimpse(votes_vacc_pop)
+```
 
-```{r, warning=FALSE, message=FALSE, echo=FALSE}
+Then, use ggplot to plot the relationship between percentage of trump vote and percentage of population vaccinated.
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+
+votes_vacc_pop %>% 
+  ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
+             size=pop_estimate_2019)) + 
+  
+  #hide the legend for point size
+  theme(legend.position="none")+
+  
+  #aethetics for population size
+  geom_point(color = "black", alpha = .6) +
+  scale_size(range = c(0, 15)) +
+  
+  #fit a regression line to the plot
+  geom_smooth(method=lm) + 
+  
+  #draw the dash lines
+  geom_hline(yintercept=0.85, linetype="dashed") +
+  geom_hline(yintercept=0.539, linetype="dashed") +
+  geom_hline(yintercept=0.508, linetype="dashed") +
+  
+  #break the graph into 3x3 grids with solid lines
+  geom_hline(yintercept=0.4, linetype="solid") +
+  geom_hline(yintercept=0.6, linetype="solid") +
+  geom_vline(xintercept=0.4, linetype="solid") +
+  geom_vline(xintercept=0.6, linetype="solid") +
+  
+  labs(title = "COVID 19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY",
+       subtitle = "(most states based on FULLY vaccinated only; (CA, GA, IA, MI & TX based on total doses administered)\nData via Centers for Disease Control",
+       x = "2020 Trump Vote %", 
+       y = "% of Total Population Vaccinated") +
+  
+  theme(plot.title= element_text(size=10, face="bold", family = "Tahoma"))+
+  theme(plot.subtitle= element_text(size=8, family = "Tahoma"))
+
+```
+
+
+Finally, add benchmarking lines and aethetics for political lean.  
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
 
 votes_vacc_pop %>% 
   ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
