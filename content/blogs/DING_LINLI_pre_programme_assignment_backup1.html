@@ -17,9 +17,150 @@ title: Political lean and vaccination in US 2021
 <script src="/rmarkdown-libs/header-attrs/header-attrs.js"></script>
 
 
+<p><img src="/img/trump_vaccine.jpg" /><!-- --></p>
 <p>Under the COVID-19 pandemic in the United States, I found that there seems to be a strong relationship between people’s political ideology and vaccination acceptance.</p>
 <div id="how-trump-voters-react-to-vaccination" class="section level1">
 <h1>How Trump voters react to vaccination?</h1>
-<p>Then, plot the relationship between percentage of trump vote and percentage of population vaccinated.</p>
-<p><img src="/blogs/DING_LINLI_pre_programme_assignment_backup1_files/figure-html/unnamed-chunk-3-1.png" width="672" /></p>
+<p>##A glimpse of the <a href="https://data.cdc.gov/api/views/8xkx-amqh/rows.csv?accessType=DOWNLOAD">COVID data</a> downloaded from Centers for Disease Control and Prevention (CDC).</p>
+<pre class="r bg-primary"><code>#visualize the original dataset
+glimpse(election2020_results)</code></pre>
+<pre class="bg-success"><code>## Rows: 22,079
+## Columns: 12
+## $ year           &lt;dbl&gt; 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2020, 2…
+## $ state          &lt;chr&gt; &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, &quot;ALABAMA&quot;, …
+## $ state_po       &lt;chr&gt; &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;AL&quot;, &quot;…
+## $ county_name    &lt;chr&gt; &quot;AUTAUGA&quot;, &quot;AUTAUGA&quot;, &quot;AUTAUGA&quot;, &quot;BALDWIN&quot;, &quot;BALDWIN&quot;, …
+## $ fips           &lt;chr&gt; &quot;01001&quot;, &quot;01001&quot;, &quot;01001&quot;, &quot;01003&quot;, &quot;01003&quot;, &quot;01003&quot;, &quot;…
+## $ office         &lt;chr&gt; &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PRESIDENT&quot;, &quot;PR…
+## $ candidate      &lt;chr&gt; &quot;JOSEPH R BIDEN JR&quot;, &quot;OTHER&quot;, &quot;DONALD J TRUMP&quot;, &quot;JOSEPH…
+## $ party          &lt;chr&gt; &quot;DEMOCRAT&quot;, &quot;OTHER&quot;, &quot;REPUBLICAN&quot;, &quot;DEMOCRAT&quot;, &quot;OTHER&quot;,…
+## $ candidatevotes &lt;dbl&gt; 7503, 429, 19838, 24578, 1557, 83544, 4816, 80, 5622, 1…
+## $ totalvotes     &lt;dbl&gt; 27770, 27770, 27770, 109679, 109679, 109679, 10518, 105…
+## $ version        &lt;dbl&gt; 20210622, 20210622, 20210622, 20210622, 20210622, 20210…
+## $ mode           &lt;chr&gt; &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;TOTAL&quot;, &quot;…</code></pre>
+<p>We then filter the data for Trump supporters, filter the most recent data (September 2021) and join <a href="https://www.ers.usda.gov/webdocs/DataFiles/48747/PopulationEstimates.csv?v=2232">population data of each county</a> downloaded from Economic Research Service.</p>
+<p>The prepared dataframe now look like as follows.</p>
+<pre class="r bg-primary"><code>glimpse(votes_vacc_pop)</code></pre>
+<pre class="bg-success"><code>## Rows: 2,840
+## Columns: 8
+## Groups: county_name, fips [2,840]
+## $ county_name             &lt;chr&gt; &quot;ABBEVILLE&quot;, &quot;ACADIA&quot;, &quot;ACCOMACK&quot;, &quot;ADA&quot;, &quot;ADA…
+## $ fips                    &lt;chr&gt; &quot;45001&quot;, &quot;22001&quot;, &quot;51001&quot;, &quot;16001&quot;, &quot;19001&quot;, &quot;…
+## $ totalvotes              &lt;dbl&gt; 12433, 28425, 16962, 259389, 4177, 8763, 10336…
+## $ vote_sum                &lt;dbl&gt; 8215, 22596, 9172, 130699, 2922, 7276, 6413, 5…
+## $ vote_rate               &lt;dbl&gt; 0.6607416, 0.7949340, 0.5407381, 0.5038726, 0.…
+## $ date                    &lt;chr&gt; &quot;09/04/2021&quot;, &quot;09/04/2021&quot;, &quot;09/04/2021&quot;, &quot;09/…
+## $ series_complete_pop_pct &lt;dbl&gt; 32.7, 40.8, 53.9, 48.3, 42.3, 31.0, 37.7, 25.7…
+## $ pop_estimate_2019       &lt;dbl&gt; 24527, 62045, 32316, 481587, 7152, 19202, 2534…</code></pre>
+<p>##Initial plot
+Then, use ggplot to plot the relationship between percentage of trump vote and percentage of population vaccinated. The size of each point represents the population size of each county.</p>
+<pre class="r"><code>votes_vacc_pop %&gt;% 
+  ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
+             size=pop_estimate_2019)) + 
+  
+  #hide the legend for point size
+  theme(legend.position=&quot;none&quot;)+
+  
+  #aethetics for population size
+  geom_point(color = &quot;black&quot;, alpha = .6) +
+  scale_size(range = c(0, 15)) +
+  
+  #fit a regression line to the plot
+  geom_smooth(method=lm) + 
+  
+  #draw the dash lines
+  geom_hline(yintercept=0.85, linetype=&quot;dashed&quot;) +
+  geom_hline(yintercept=0.539, linetype=&quot;dashed&quot;) +
+  geom_hline(yintercept=0.508, linetype=&quot;dashed&quot;) +
+  
+  #break the graph into 3x3 grids with solid lines
+  geom_hline(yintercept=0.4, linetype=&quot;solid&quot;) +
+  geom_hline(yintercept=0.6, linetype=&quot;solid&quot;) +
+  geom_vline(xintercept=0.4, linetype=&quot;solid&quot;) +
+  geom_vline(xintercept=0.6, linetype=&quot;solid&quot;) +
+  
+  labs(title = &quot;COVID 19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY&quot;,
+       subtitle = &quot;(most states based on FULLY vaccinated only; (CA, GA, IA, MI &amp; TX based on total doses administered)\nData via Centers for Disease Control&quot;,
+       x = &quot;2020 Trump Vote %&quot;, 
+       y = &quot;% of Total Population Vaccinated&quot;) +
+  
+  theme(plot.title= element_text(size=10, face=&quot;bold&quot;, family = &quot;Tahoma&quot;))+
+  theme(plot.subtitle= element_text(size=8, family = &quot;Tahoma&quot;))</code></pre>
+<p><img src="/blogs/DING_LINLI_pre_programme_assignment_backup1_files/figure-html/unnamed-chunk-5-1.png" width="672" />
+Based on the initial plot, we can see that there seems to be a negative relationship between the two variables, i.e., the more Trump supporters are in the county, the lower the rate of total population vaccinated. This maybe because a number of them are hesitant to take vaccines because it compromises their liberty. And another portion of the population refuses to get vaccinated because Biden is taking credit for the COVID shots.</p>
+<p>We can also see a pattern that the most populated counties based on the size of the point, are mostly deep blue counties and have a relatively high percentage of vaccine rate. The reason maybe that assuming each county has relatively the same geographical area size, the more population, the more population density, and COVID transmit faster in heavily populated counties than those with less population density. And because of this, the local government may invest more in promoting vaccination and people may be more aware of the disease and tend to be more willing to get vaccinated. Vice versa, those counties with less than 30% vaccination rate, can be explained, except for a few outliers in deep blue counties.</p>
+<p>##Linear Model</p>
+<pre class="r"><code>model1 &lt;- lm(series_complete_pop_pct/100~vote_rate,data=votes_vacc_pop)
+msummary(model1)</code></pre>
+<pre><code>##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  0.634078   0.009175   69.11   &lt;2e-16 ***
+## vote_rate   -0.383363   0.013857  -27.66   &lt;2e-16 ***
+## 
+## Residual standard error: 0.1176 on 2838 degrees of freedom
+## Multiple R-squared:  0.2124, Adjusted R-squared:  0.2121 
+## F-statistic: 765.4 on 1 and 2838 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>Based on the result, we can generate the following formula for the linear model.
+<span class="math inline">\(R^2 = 0.21\)</span>
+<span class="math inline">\(y = -0.38x + 0.63\)</span></p>
+<p>Based on the results, we can see that the r-squared is 0.21. This means this linear model can explain <em>21%</em> of the estimate of rate of vaccines. And if vote rate increase by 1 percent, the vaccine rate will decrease by 0.38 percent.</p>
+<p>##Further aethetics based on the initial plot
+Finally, add benchmarking lines and aethetics for political lean.</p>
+<pre class="r"><code>votes_vacc_pop %&gt;% 
+  ggplot(aes(x=vote_rate,y=series_complete_pop_pct/100,
+             size=pop_estimate_2019)) + 
+  
+  #hide the legend for point size
+  theme(legend.position=&quot;none&quot;)+
+  
+  #aethetics for population size
+  geom_point(color = &quot;black&quot;, alpha = .6) +
+  scale_size(range = c(0, 15)) +
+  
+  #fit a regression line to the plot
+  geom_smooth(method=lm) + 
+  
+  #draw the dash lines
+  geom_hline(yintercept=0.85, linetype=&quot;dashed&quot;) +
+  geom_hline(yintercept=0.539, linetype=&quot;dashed&quot;) +
+  geom_hline(yintercept=0.508, linetype=&quot;dashed&quot;) +
+  
+  #break the graph into 3x3 grids with solid lines
+  geom_hline(yintercept=0.4, linetype=&quot;solid&quot;) +
+  geom_hline(yintercept=0.6, linetype=&quot;solid&quot;) +
+  geom_vline(xintercept=0.4, linetype=&quot;solid&quot;) +
+  geom_vline(xintercept=0.6, linetype=&quot;solid&quot;) +
+  
+  labs(title = &quot;COVID 19 VACCINATION LEVELS OUT OF TOTAL POPULATION BY COUNTY&quot;,
+       subtitle = &quot;(most states based on FULLY vaccinated only; (CA, GA, IA, MI &amp; TX based on total doses administered)\nData via Centers for Disease Control&quot;,
+       x = &quot;2020 Trump Vote %&quot;, 
+       y = &quot;% of Total Population Vaccinated&quot;) +
+  
+  theme(plot.title= element_text(size=10, face=&quot;bold&quot;, family = &quot;Tahoma&quot;))+
+  theme(plot.subtitle= element_text(size=8, family = &quot;Tahoma&quot;))+
+  
+  #add the text messages
+  annotate(&quot;text&quot;, x = 0.2,y = 0.89, 
+           label = &quot;Herd Immunity Threshold (?)&quot;,
+           color = &#39;blue&#39;,size = 3) +
+  annotate(&quot;text&quot;, x = 0.05, y = 0.56, 
+           label = &quot;TARGET:53.9%&quot;, fontface = &#39;italic&#39;, 
+           color = &#39;blue&#39;,size = 3) +
+  annotate(&quot;text&quot;, x = 0.05, y = 0.525, 
+           label = &quot;ACTUAL:50.8%&quot;, fontface = &#39;italic&#39;, 
+           color = &#39;blue&#39;,size = 3)+
+  annotate(&quot;text&quot;, x = 0.2, y = 0.1, label = &quot;14/Sept/2021\nR^2 = 0.21\ny = -0.38x + 0.63&quot;, 
+           fontface = &#39;italic&#39;, color = &#39;red&#39;) +
+  annotate(&quot;text&quot;, x = 0.45, y = 1, fontface = &quot;bold&quot;, 
+           label = &quot;EVERY U.S. COUNTY&quot;, 
+           size = 3) +
+  scale_y_continuous(labels = scales::percent)+
+  scale_x_continuous(labels = scales::percent, limits = c(0,1))+
+  
+  #shade areas for political lean
+  annotate(geom = &quot;rect&quot;, xmin = 0, xmax = 0.55, ymin = -Inf, ymax = Inf,
+           fill = &quot;blue&quot;, alpha = 0.3)+
+  annotate(geom = &quot;rect&quot;, xmin = 0.45, xmax = 1, ymin = -Inf, ymax = Inf,
+           fill = &quot;red&quot;, alpha = 0.3)</code></pre>
+<p><img src="/blogs/DING_LINLI_pre_programme_assignment_backup1_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
+<p>There is no exact estimate of how high is the Herd Immunity Threshold and here we use 89% to represent the threshold to indicate that if population immune to COVID reaches 89%, the spread of the virus will decline. However, only 2 counties reached this threshold and are deep blue counties with low support rate for Trump. The actual vaccine rate hasn’t reached the target provided by the government.</p>
 </div>

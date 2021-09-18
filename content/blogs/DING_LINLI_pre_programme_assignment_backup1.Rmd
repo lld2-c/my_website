@@ -13,6 +13,9 @@ keywords: ""
 slug: tempus
 title: Political lean and vaccination in US 2021
 ---
+```{r german_election, echo=FALSE, fig.width=10}
+knitr::include_graphics("/img/trump_vaccine.jpg", error = FALSE)
+```
 
 ```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
 library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
@@ -117,7 +120,8 @@ The prepared dataframe now look like as follows.
 glimpse(votes_vacc_pop)
 ```
 
-Then, use ggplot to plot the relationship between percentage of trump vote and percentage of population vaccinated.
+##Initial plot
+Then, use ggplot to plot the relationship between percentage of trump vote and percentage of population vaccinated. The size of each point represents the population size of each county. 
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
 
 votes_vacc_pop %>% 
@@ -154,8 +158,22 @@ votes_vacc_pop %>%
   theme(plot.subtitle= element_text(size=8, family = "Tahoma"))
 
 ```
+Based on the initial plot, we can see that there seems to be a negative relationship between the two variables, i.e., the more Trump supporters are in the county, the lower the rate of total population vaccinated. This maybe because a number of them are hesitant to take vaccines because it compromises their liberty. And another portion of the population refuses to get vaccinated because Biden is taking credit for the COVID shots.  
 
+We can also see a pattern that the most populated counties based on the size of the point, are mostly deep blue counties and have a relatively high percentage of vaccine rate. The reason maybe that assuming each county has relatively the same geographical area size, the more population, the more population density, and COVID transmit faster in heavily populated counties than those with less population density. And because of this, the local government may invest more in promoting vaccination and people may be more aware of the disease and tend to be more willing to get vaccinated. Vice versa, those counties with less than 30% vaccination rate, can be explained, except for a few outliers in deep blue counties. 
 
+##Linear Model
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+model1 <- lm(series_complete_pop_pct/100~vote_rate,data=votes_vacc_pop)
+msummary(model1)
+```
+Based on the result, we can generate the following formula for the linear model. 
+$R^2 = 0.21$
+$y = -0.38x + 0.63$
+
+Based on the results, we can see that the r-squared is 0.21. This means this linear model can explain *21%* of the estimate of rate of vaccines. And if vote rate increase by 1 percent, the vaccine rate will decrease by 0.38 percent. 
+
+##Further aethetics based on the initial plot
 Finally, add benchmarking lines and aethetics for political lean.  
 ```{r, warning=FALSE, message=FALSE, echo=TRUE}
 
@@ -202,7 +220,7 @@ votes_vacc_pop %>%
   annotate("text", x = 0.05, y = 0.525, 
            label = "ACTUAL:50.8%", fontface = 'italic', 
            color = 'blue',size = 3)+
-  annotate("text", x = 0.2, y = 0.1, label = "14/Sept/2021", 
+  annotate("text", x = 0.2, y = 0.1, label = "14/Sept/2021\nR^2 = 0.21\ny = -0.38x + 0.63", 
            fontface = 'italic', color = 'red') +
   annotate("text", x = 0.45, y = 1, fontface = "bold", 
            label = "EVERY U.S. COUNTY", 
@@ -216,5 +234,6 @@ votes_vacc_pop %>%
   annotate(geom = "rect", xmin = 0.45, xmax = 1, ymin = -Inf, ymax = Inf,
            fill = "red", alpha = 0.3)
 
-
 ```
+
+There is no exact estimate of how high is the Herd Immunity Threshold and here we use 89% to represent the threshold to indicate that if population immune to COVID reaches 89%, the spread of the virus will decline. However, only 2 counties reached this threshold and are deep blue counties with low support rate for Trump. The actual vaccine rate hasn't reached the target provided by the government. 
