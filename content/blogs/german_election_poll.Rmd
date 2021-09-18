@@ -8,7 +8,7 @@ draft: false
 #image: german_election.jpeg
 keywords: ""
 slug: magna
-title: German election poll 2021 prediction
+title: German election poll 2021 analysis
 ---
 
 ```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}

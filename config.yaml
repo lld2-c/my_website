@@ -94,21 +94,21 @@ params:
         title: Political lean and vaccination in US 2021
         url: blogs/tempus
       - image: german_plot.png
-        subtitle: Lorem Etiam Nullam
-        title: German election poll 2021 prediction
+        subtitle: The opinion poll trend of 6 political parties
+        title: German election poll 2021 analysis
         url: blogs/magna
-      - image: stock_news_plot.png
-        subtitle: How do news correlate to stock performances?
-        title:  News and stock performances
-        url: blogs/stock
       - image: brexit_plot.png
         subtitle: Brexit demographical and geographical vote result
         title: Brexit - who and where?
-        url: blogs/ipsum
-      - image: pay_discrimination_plot.png
-        subtitle: How do gender, experience, and pay correlate to each other?
-        title: Pay discrimination
-        url: blogs/etiam
+        url: blogs/brexit
+      #- image: stock_news_plot.png
+        #subtitle: How do news correlate to stock performances?
+        #title:  News and stock performances
+        #url: blogs/ipsum
+      #- image: pay_discrimination_plot.png
+        #subtitle: How do gender, experience, and pay correlate to each other?
+        #title: Pay discrimination
+        #url: blogs/etiam
   two:
     buttonText: Get Started
     enable: yes
