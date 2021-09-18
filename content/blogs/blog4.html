@@ -18,3 +18,116 @@ title: Brexit - who and where?
 
 
 <p><img src="/img/brexit.jpeg" /><!-- --></p>
+<pre class="r"><code>glimpse(brexit) # examine the data frame</code></pre>
+<pre><code>## Rows: 632
+## Columns: 11
+## $ Seat        &lt;chr&gt; &quot;Aldershot&quot;, &quot;Aldridge-Brownhills&quot;, &quot;Altrincham and Sale W…
+## $ con_2015    &lt;dbl&gt; 50.592, 52.050, 52.994, 43.979, 60.788, 22.418, 52.454, 22…
+## $ lab_2015    &lt;dbl&gt; 18.333, 22.369, 26.686, 34.781, 11.197, 41.022, 18.441, 49…
+## $ ld_2015     &lt;dbl&gt; 8.824, 3.367, 8.383, 2.975, 7.192, 14.828, 5.984, 2.423, 1…
+## $ ukip_2015   &lt;dbl&gt; 17.867, 19.624, 8.011, 15.887, 14.438, 21.409, 18.821, 21.…
+## $ leave_share &lt;dbl&gt; 57.89777, 67.79635, 38.58780, 65.29912, 49.70111, 70.47289…
+## $ born_in_uk  &lt;dbl&gt; 83.10464, 96.12207, 90.48566, 97.30437, 93.33793, 96.96214…
+## $ male        &lt;dbl&gt; 49.89896, 48.92951, 48.90621, 49.21657, 48.00189, 49.17185…
+## $ unemployed  &lt;dbl&gt; 3.637000, 4.553607, 3.039963, 4.261173, 2.468100, 4.742731…
+## $ degree      &lt;dbl&gt; 13.870661, 9.974114, 28.600135, 9.336294, 18.775591, 6.085…
+## $ age_18to24  &lt;dbl&gt; 9.406093, 7.325850, 6.437453, 7.747801, 5.734730, 8.209863…</code></pre>
+<pre class="r"><code>#Prepare the dataset
+temp_brexit &lt;- brexit %&gt;% 
+  select(con_2015, lab_2015, ld_2015, ukip_2015, leave_share) %&gt;% 
+  pivot_longer(cols = 1:4, 
+               names_to = &quot;party&quot;, 
+               values_to = &quot;party_percentage&quot;)
+
+#map the colors to each party
+cols &lt;- c(&quot;con_2015&quot; = &quot;#0087dc&quot;, 
+          &quot;lab_2015&quot; = &quot;#d50000&quot;, 
+          &quot;ld_2015&quot; = &quot;#FDBB30&quot;, 
+          &quot;ukip_2015&quot; = &quot;#EFE600&quot;)</code></pre>
+<pre class="r"><code>#plot the political lean and leave vote in brexit
+temp_brexit %&gt;% 
+  ggplot(aes(x=party_percentage,
+             y=leave_share, 
+             group=party, 
+             color=party)) +
+  
+  #aesthetics for the scatter plot
+  geom_point(alpha = 0.5)+
+  
+  #fit linear regression lines to the plot
+  geom_smooth(method=lm, size = 0.5)+
+  
+  #apply the title, legend for x-axis and y-axis
+  labs(title = &quot;How political affiliation translated to Brexit Voting&quot;, 
+       x = &quot;Party % in the UK 2015 general election&quot;, 
+       y = &quot;Leave % in the 2016 Brexit referendum&quot;)+
+  
+  #colors and names for the legend of each clusters
+  scale_colour_manual(labels = c(&quot;Conservative&quot;, &quot;Labour&quot;,&quot;Lib Dems&quot;,&quot;UKIP&quot;),
+                      values = cols)+
+  
+  #aesthetics for the legend
+  theme_bw()+
+  theme(legend.position = &quot;bottom&quot;,
+        plot.title = element_text(face = &quot;bold&quot;, size = 13))+
+  theme(legend.title = element_blank())+
+  NULL</code></pre>
+<p><img src="/blogs/blog4_files/figure-html/unnamed-chunk-4-1.png" width="672" /></p>
+<div id="correlation-between-degree-and-leave-share-ukip-support-rate-and-leave-share-are-strong." class="section level2">
+<h2>Correlation between degree and leave share, UKIP support rate and leave share are strong.</h2>
+<pre class="r"><code>corr_brexit &lt;- brexit %&gt;% 
+  select(born_in_uk, male, unemployed, degree, age_18to24, 
+         con_2015, lab_2015, ld_2015, ukip_2015, 
+         leave_share) 
+corr_brexit%&gt;% 
+  ggpairs()</code></pre>
+<p><img src="/blogs/blog4_files/figure-html/unnamed-chunk-5-1.png" width="672" /></p>
+<p>There is a strong relationship between <strong>degree</strong> and <strong>Leave share</strong>. This means that the higher the proportion of population who has a degree, the lower the rate they vote for Brexit.</p>
+<p>The higher educated are more supportive of the EU as they profit more than the less educated from further European integration, due to their knowledge and skills. Because of the disappearance of hard borders within Europe, studying or working in another EU member state is a realistic possibility for many.</p>
+<p>The result is also coincided by a recent study from Sara Hobolt showing that around 70% of Britons without any qualifications voted Leave, while only 25% of voters with a university degree did.</p>
+<p>There is a strong relationship between <strong>supporters vote share for UK Independence Party (UKIP)</strong> and <strong>Brexit share</strong> as seen above between <code>ukip_2015</code> and <code>leave_share</code>. This is probably because UKIP, as a right-wing of British politics, its primary emphasis has been on Euroscepticism, calling for the United Kingdom’s exit from the European Union (EU).</p>
+<p><em>Reference</em>: <a href="https://blogs.lse.ac.uk/brexit/2019/11/04/would-a-more-educated-population-have-rejected-brexit/" class="uri">https://blogs.lse.ac.uk/brexit/2019/11/04/would-a-more-educated-population-have-rejected-brexit/</a></p>
+</div>
+<div id="linear-model" class="section level2">
+<h2>Linear Model</h2>
+<pre class="r"><code>model1 &lt;- lm(leave_share~.,data=corr_brexit)
+msummary(model1)</code></pre>
+<pre><code>##              Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept)  6.090941  11.174471   0.545 0.585917    
+## born_in_uk  -0.007348   0.020737  -0.354 0.723221    
+## male         0.743495   0.203906   3.646 0.000291 ***
+## unemployed   0.449130   0.189008   2.376 0.017823 *  
+## degree      -0.826423   0.030711 -26.909  &lt; 2e-16 ***
+## age_18to24  -0.259768   0.047583  -5.459 7.18e-08 ***
+## con_2015     0.236923   0.022694  10.440  &lt; 2e-16 ***
+## lab_2015     0.129272   0.025187   5.132 3.94e-07 ***
+## ld_2015      0.132890   0.027913   4.761 2.45e-06 ***
+## ukip_2015    0.786945   0.042635  18.458  &lt; 2e-16 ***
+## 
+## Residual standard error: 3.079 on 563 degrees of freedom
+##   (59 observations deleted due to missingness)
+## Multiple R-squared:  0.9202, Adjusted R-squared:  0.9189 
+## F-statistic: 721.2 on 9 and 563 DF,  p-value: &lt; 2.2e-16</code></pre>
+<pre class="r"><code>vif(model1)</code></pre>
+<pre><code>## born_in_uk       male unemployed     degree age_18to24   con_2015   lab_2015 
+##   3.506365   1.514946   4.396018   3.973118   1.764195   7.050112  10.847648 
+##    ld_2015  ukip_2015 
+##   2.967263   3.402759</code></pre>
+<p>Labour (<code>lab_2015</code>) has Variance Inflation Factor (VIF) &gt; 10; <code>born_in_uk</code> and <code>ld_2015</code> have too high p-values, drop and rerun regression.</p>
+<pre class="r"><code>model2 &lt;- lm(leave_share~ . - lab_2015 - born_in_uk - ld_2015,data=corr_brexit)
+msummary(model2)</code></pre>
+<pre><code>##             Estimate Std. Error t value Pr(&gt;|t|)    
+## (Intercept) 16.13245    9.60615   1.679 0.093628 .  
+## male         0.71777    0.19925   3.602 0.000343 ***
+## unemployed   0.76729    0.13512   5.678 2.17e-08 ***
+## degree      -0.82714    0.02487 -33.263  &lt; 2e-16 ***
+## age_18to24  -0.26090    0.04861  -5.367 1.17e-07 ***
+## con_2015     0.14293    0.01361  10.504  &lt; 2e-16 ***
+## ukip_2015    0.66081    0.03633  18.188  &lt; 2e-16 ***
+## 
+## Residual standard error: 3.148 on 566 degrees of freedom
+##   (59 observations deleted due to missingness)
+## Multiple R-squared:  0.9161, Adjusted R-squared:  0.9152 
+## F-statistic:  1030 on 6 and 566 DF,  p-value: &lt; 2.2e-16</code></pre>
+<p>This way we have a decent model where the variables can explain 91.5% of the estimate of leave share in Brexit.</p>
+</div>

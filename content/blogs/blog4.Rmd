@@ -15,9 +15,122 @@ title: Brexit - who and where?
 ---
 
 ```{r load-libraries, warning=FALSE, message=FALSE, echo=FALSE}
-
+library(tidyverse)  # Load ggplot2, dplyr, and all the other tidyverse packages
+library(mosaic)
+library(ggthemes)
+library(GGally)
+library(readxl)
+library(here)
+library(skimr)
+library(janitor)
+library(broom)
+library(tidyquant)
+library(infer)
+library(openintro)
+library(RSQLite)
+library(dbplyr)
+library(DBI)
+library(janitor)
+library(car)
 ```
 
 ```{r brexit, echo=FALSE, fig.width=10}
 knitr::include_graphics("/img/brexit.jpeg", error = FALSE)
 ```
+
+```{r, warning=FALSE, message=FALSE, echo=FALSE}
+#Import the csv file
+brexit <- read_csv(here::here("data", "brexit_results.csv"))
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+glimpse(brexit) # examine the data frame
+```
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+#Prepare the dataset
+temp_brexit <- brexit %>% 
+  select(con_2015, lab_2015, ld_2015, ukip_2015, leave_share) %>% 
+  pivot_longer(cols = 1:4, 
+               names_to = "party", 
+               values_to = "party_percentage")
+
+#map the colors to each party
+cols <- c("con_2015" = "#0087dc", 
+          "lab_2015" = "#d50000", 
+          "ld_2015" = "#FDBB30", 
+          "ukip_2015" = "#EFE600")
+```
+
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE, results='markup'}
+#plot the political lean and leave vote in brexit
+temp_brexit %>% 
+  ggplot(aes(x=party_percentage,
+             y=leave_share, 
+             group=party, 
+             color=party)) +
+  
+  #aesthetics for the scatter plot
+  geom_point(alpha = 0.5)+
+  
+  #fit linear regression lines to the plot
+  geom_smooth(method=lm, size = 0.5)+
+  
+  #apply the title, legend for x-axis and y-axis
+  labs(title = "How political affiliation translated to Brexit Voting", 
+       x = "Party % in the UK 2015 general election", 
+       y = "Leave % in the 2016 Brexit referendum")+
+  
+  #colors and names for the legend of each clusters
+  scale_colour_manual(labels = c("Conservative", "Labour","Lib Dems","UKIP"),
+                      values = cols)+
+  
+  #aesthetics for the legend
+  theme_bw()+
+  theme(legend.position = "bottom",
+        plot.title = element_text(face = "bold", size = 13))+
+  theme(legend.title = element_blank())+
+  NULL
+```
+
+## Correlation between degree and leave share, UKIP support rate and leave share are strong. 
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+corr_brexit <- brexit %>% 
+  select(born_in_uk, male, unemployed, degree, age_18to24, 
+         con_2015, lab_2015, ld_2015, ukip_2015, 
+         leave_share) 
+corr_brexit%>% 
+  ggpairs()
+```
+
+There is a strong relationship between **degree** and **Leave share**. This means that the higher the proportion of population who has a degree, the lower the rate they vote for Brexit. 
+
+The higher educated are more supportive of the EU as they profit more than the less educated from further European integration, due to their knowledge and skills. Because of the disappearance of hard borders within Europe, studying or working in another EU member state is a realistic possibility for many. 
+
+The result is also coincided by a recent study from Sara Hobolt showing that around 70% of Britons without any qualifications voted Leave, while only 25% of voters with a university degree did.
+
+There is a strong relationship between **supporters vote share for UK Independence Party (UKIP)** and **Brexit share** as seen above between `ukip_2015` and `leave_share`. This is probably because UKIP, as a right-wing of British politics, its primary emphasis has been on Euroscepticism, calling for the United Kingdom's exit from the European Union (EU). 
+
+*Reference*: https://blogs.lse.ac.uk/brexit/2019/11/04/would-a-more-educated-population-have-rejected-brexit/
+
+## Linear Model
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+model1 <- lm(leave_share~.,data=corr_brexit)
+msummary(model1)
+```
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+vif(model1)
+```
+
+Labour (`lab_2015`) has Variance Inflation Factor (VIF) > 10; `born_in_uk` and `ld_2015` have too high p-values, drop and rerun regression. 
+
+```{r, warning=FALSE, message=FALSE, echo=TRUE}
+model2 <- lm(leave_share~ . - lab_2015 - born_in_uk - ld_2015,data=corr_brexit)
+msummary(model2)
+```
+
+This way we have a decent model where the variables can explain 91.5% of the estimate of leave share in Brexit. 
